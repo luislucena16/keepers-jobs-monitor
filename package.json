@@ -10,7 +10,9 @@
     "offline": "serverless offline",
     "test": "jest",
     "dev": "npm run build && npm run offline",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "test:unit": "jest src/tests/unit",
+    "test:integration": "jest src/tests/integration"
   },
   "dependencies": {
     "aws-lambda": "^1.0.7",
