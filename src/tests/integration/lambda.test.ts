@@ -1,4 +1,4 @@
-import { handler } from '../../handlers/lambda.handler';
+import { handler } from '../../handlers/lambda-handler';
 import { ScheduledEvent, Context } from 'aws-lambda';
 
 // --- Mock of services ---

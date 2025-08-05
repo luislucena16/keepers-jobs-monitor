@@ -17,6 +17,7 @@
     "dotenv": "^17.2.1",
     "ethers": "^5.8.0",
     "lru-cache": "^11.1.0",
+    "serverless": "^4.17.2",
     "zod": "^4.0.14"
   },
   "devDependencies": {
@@ -24,7 +25,6 @@
     "@types/jest": "^30.0.0",
     "jest": "^30.0.5",
     "jest-extended": "^6.0.0",
-    "serverless": "^3.40.0",
     "serverless-offline": "^13.9.0",
     "serverless-plugin-typescript": "^2.1.5",
     "ts-jest": "^29.4.1",

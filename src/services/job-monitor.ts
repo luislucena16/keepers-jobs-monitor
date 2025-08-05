@@ -1,119 +1,148 @@
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
+import { LRUCache } from "lru-cache";
 
 const ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL!;
 const provider = new ethers.providers.JsonRpcProvider(ETHEREUM_RPC_URL);
 
-// ABI for detecting calls work()
+// ABI and interface of the contract (if you want to decode)
 const JOB_ABI = ["function work(bytes32,bytes)"];
 const iface = new ethers.utils.Interface(JOB_ABI);
 
-// Most direct method for obtaining the selector
-const WORK_SELECTOR = "0x" + ethers.utils.keccak256(ethers.utils.toUtf8Bytes("work(bytes32,bytes)")).slice(2, 10);
+// Correct calculation of the function selector "work(bytes32,bytes)"
+const WORK_SELECTOR = ethers.utils.id("work(bytes32,bytes)").slice(0, 10); 
+// ethers.utils.id generates keccak256 hash, slice(0,10) takes the first 4 bytes (8 hex + '0x')
 
+// Interfaces
+interface JobStatus {
+  address: string;
+  lastWorkedBlock: number | null;
+  isStalled: boolean;
+  lastChecked: Date;
+}
 
-// Search for the last work() call for a specific job in a range of blocks
-export async function getLastWorkedBlock(
-  jobAddress: string,
-  fromBlock: number,
-  toBlock: number
-): Promise<number | null> {
-  console.log(`      🔍 Searching for work() calls to ${jobAddress} in blocks ${fromBlock}-${toBlock}`);
-  
-  try {
-    // Search for transactions in the latest blocks (starting with the most recent)
+interface BlockCache {
+  blockNumber: number;
+  timestamp: number;
+  hash: string;
+  transactions: ethers.providers.TransactionResponse[];
+}
+
+export class JobMonitorService {
+  private blockCache: LRUCache<number, BlockCache>;
+  private jobStatusCache: LRUCache<string, JobStatus>;
+
+  constructor() {
+    this.blockCache = new LRUCache({ max: 50, ttl: 1000 * 60 * 5 }); // 5 min cache for blocks
+    this.jobStatusCache = new LRUCache({ max: 1000, ttl: 1000 * 60 * 2 }); // 2 min cache for jobs
+  }
+
+  async getCurrentBlock(): Promise<number> {
+    return provider.getBlockNumber();
+  }
+
+  // Fetch a block with transactions, caching results to reduce RPC calls
+  private async getBlockWithTransactions(blockNumber: number): Promise<BlockCache | null> {
+    const cached = this.blockCache.get(blockNumber);
+    if (cached) return cached;
+
+    try {
+      const block = await provider.getBlockWithTransactions(blockNumber);
+      if (!block) return null;
+
+      const blockCacheData: BlockCache = {
+        blockNumber: block.number,
+        timestamp: block.timestamp,
+        hash: block.hash,
+        transactions: block.transactions,
+      };
+
+      this.blockCache.set(blockNumber, blockCacheData);
+      return blockCacheData;
+    } catch (error) {
+      console.error(`Error fetching block ${blockNumber}:`, error);
+      return null;
+    }
+  }
+
+  // Search backwards from toBlock to fromBlock for last work() tx for jobAddress
+  public async getLastWorkedBlock(
+    jobAddress: string,
+    fromBlock: number,
+    toBlock: number
+  ): Promise<number | null> {
+    // Check cache first
+    const cachedStatus = this.jobStatusCache.get(jobAddress);
+    if (
+      cachedStatus &&
+      cachedStatus.lastWorkedBlock !== null &&
+      cachedStatus.lastChecked > new Date(Date.now() - 2 * 60 * 1000)
+    ) {
+      return cachedStatus.lastWorkedBlock;
+    }
+
     for (let blockNumber = toBlock; blockNumber >= fromBlock; blockNumber--) {
-      try {
-        const block = await provider.getBlockWithTransactions(blockNumber);
-        
-        if (!block || !block.transactions) {
-          continue;
-        }
+      const block = await this.getBlockWithTransactions(blockNumber);
+      if (!block) continue;
 
-        // Verify each transaction in the block
-        for (const tx of block.transactions) {
-          if (
-            tx.to?.toLowerCase() === jobAddress.toLowerCase() &&
-            tx.data.startsWith(WORK_SELECTOR)
-          ) {
-            console.log(`      ✅ Found work() transaction ${tx.hash} in block ${blockNumber}`);
-            return blockNumber;
-          }
+      for (const tx of block.transactions) {
+        if (
+          tx.to?.toLowerCase() === jobAddress.toLowerCase() &&
+          tx.data.startsWith(WORK_SELECTOR)
+        ) {
+          // Cache the result
+          this.jobStatusCache.set(jobAddress, {
+            address: jobAddress,
+            lastWorkedBlock: blockNumber,
+            isStalled: false,
+            lastChecked: new Date(),
+          });
+          return blockNumber;
         }
-      } catch (blockError) {
-        console.error(`      ⚠️  Error checking block ${blockNumber}:`, blockError);
-        continue;
       }
     }
-    
-    console.log(`      ❌ No work() calls found in blocks ${fromBlock}-${toBlock}`);
-    return null;
-    
-  } catch (error) {
-    console.error(`      ❌ Error in getLastWorkedBlock for ${jobAddress}:`, error);
+
+    // If none found, cache as stalled
+    this.jobStatusCache.set(jobAddress, {
+      address: jobAddress,
+      lastWorkedBlock: null,
+      isStalled: true,
+      lastChecked: new Date(),
+    });
     return null;
   }
-}
 
+  // Check multiple jobs in parallel
+  public async checkJobsEfficiently(
+    jobAddresses: string[],
+    fromBlock: number,
+    toBlock: number
+  ): Promise<JobStatus[]> {
+    const results = await Promise.all(
+      jobAddresses.map(async (address) => {
+        const lastWorkedBlock = await this.getLastWorkedBlock(address, fromBlock, toBlock);
+        return {
+          address,
+          lastWorkedBlock,
+          isStalled: lastWorkedBlock === null,
+          lastChecked: new Date(),
+        };
+      })
+    );
+    return results;
+  }
 
-// Obtains detailed information about a job (can be expanded as needed)
-export async function getJobInfo(jobAddress: string): Promise<{
-  address: string;
-  isValid: boolean;
-  lastChecked: Date;
-}> {
-  try {
-    // Verify that the address is valid
-    const code = await provider.getCode(jobAddress);
-    const isValid = code !== '0x';
-    
+  // Clear both caches
+  public clearCaches(): void {
+    this.blockCache.clear();
+    this.jobStatusCache.clear();
+    console.log("🧹 Caches cleared");
+  }
+
+  // Return cache statistics
+  public getCacheStats() {
     return {
-      address: jobAddress,
-      isValid,
-      lastChecked: new Date()
-    };
-  } catch (error) {
-    console.error(`Error getting job info for ${jobAddress}:`, error);
-    return {
-      address: jobAddress,
-      isValid: false,
-      lastChecked: new Date()
+      blockCache: { size: this.blockCache.size, max: 50 },
+      jobStatusCache: { size: this.jobStatusCache.size, max: 1000 },
     };
   }
-}
-
-// Check multiple jobs in parallel
-export async function checkMultipleJobs(
-  jobAddresses: string[],
-  fromBlock: number,
-  toBlock: number
-): Promise<Array<{address: string, lastWorkedBlock: number | null, isStalled: boolean}>> {
-  console.log(`🔄 Checking ${jobAddresses.length} jobs in parallel...`);
-  
-  const promises = jobAddresses.map(async (address, index) => {
-    console.log(`   Processing job ${index + 1}/${jobAddresses.length}: ${address}`);
-    
-    const lastWorkedBlock = await getLastWorkedBlock(address, fromBlock, toBlock);
-    const isStalled = lastWorkedBlock === null;
-    
-    return {
-      address,
-      lastWorkedBlock,
-      isStalled
-    };
-  });
-  
-  const results = await Promise.allSettled(promises);
-  
-  return results.map((result, index) => {
-    if (result.status === 'fulfilled') {
-      return result.value;
-    } else {
-      console.error(`❌ Failed to check job ${jobAddresses[index]}:`, result.reason);
-      return {
-        address: jobAddresses[index],
-        lastWorkedBlock: null,
-        isStalled: true // Assume stalled in case of error
-      };
-    }
-  });
 }
