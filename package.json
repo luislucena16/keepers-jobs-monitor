@@ -19,7 +19,7 @@
     "dotenv": "^17.2.1",
     "ethers": "^5.8.0",
     "lru-cache": "^11.1.0",
-    "serverless": "^4.17.2",
+    "serverless": "^3.40.0",
     "zod": "^4.0.14"
   },
   "devDependencies": {

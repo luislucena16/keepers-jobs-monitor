@@ -26,24 +26,16 @@ npm install
 - Add the .env:
 ```shell
 cp .env.example .env
-# Configure your .env file (Add your Discord webhook)
 ```
+**Note**: Add your own Discord webhook in the `DISCORD_WEBHOOK_URL` field.
 
-- You must have something like this:
-
-```bash
-ETHEREUM_RPC_URL=https://eth.llamarpc.com
-SEQUENCER_ADDRESS=0x1234567890123456789012345678901234567890
-DISCORD_WEBHOOK_URL=add_your_webhook_here
-```
-
-- Build project
+- Build the project
 
 ```shell
 npm run build
 ```
 
-- Run the project in local:
+- Run the project in local (one-shot):
 ```
 npm run start
 ```
@@ -53,7 +45,7 @@ npm run start
 npx serverless offline
 ```
 
-It will start sending an alert every 5 minutes, which will look something like this:
+**Note**: It will start sending an alert every 5 minutes, which will look something like this:
 ![Jobs Alert](jobs-alert.png)
 
 ## 🏗️ Architecture
