@@ -1,7 +1,7 @@
 import { Context, ScheduledEvent } from 'aws-lambda';
 import { ethers } from 'ethers';
-import { getLastWorkedBlock } from './job-monitor';
-import { sendStallAlert, sendErrorAlert } from './discord-service';
+import { getLastWorkedBlock } from '../services/job-monitor.service';
+import { sendStallAlert, sendErrorAlert } from '../services/discord.service';
 
 // Configs .env
 const ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL!;

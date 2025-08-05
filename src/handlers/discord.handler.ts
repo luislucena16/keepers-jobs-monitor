@@ -2,9 +2,9 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import { ethers } from "ethers";
-import { numJobs, jobAt } from "./sequencer";
-import { getLastWorkedBlock } from "./job";
-import { sendDiscordAlert } from "./discord";
+import { numJobs, jobAt } from "../services/sequencer.service";
+import { getLastWorkedBlock } from "../types/job";
+import { sendDiscordAlert } from "../types/discord";
 
 console.log("🚀 ========================================");
 console.log("🚀 MAKERDAO JOB MONITOR STARTING...");

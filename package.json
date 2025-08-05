@@ -2,7 +2,7 @@
   "name": "wonderland-offchain-challenge",
   "version": "1.0.0",
   "scripts": {
-    "start": "ts-node src/test-runner.ts",
+    "start": "ts-node src/tests/test-runner.ts",
     "build": "tsc",
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",

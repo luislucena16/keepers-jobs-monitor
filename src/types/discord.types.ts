@@ -2,14 +2,14 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "";
 
 export async function sendDiscordAlert(message: string): Promise<void> {
     if (!DISCORD_WEBHOOK_URL) {
-        console.error("❌ Discord webhook URL no está configurada.");
-        console.error("❌ Verifica que la variable DISCORD_WEBHOOK_URL esté definida en tu .env");
+        console.error("❌ Discord webhook URL is not configured");
+        console.error("❌ Verify that the DISCORD_WEBHOOK_URL variable is defined in your .env file");
         return;
     }
 
     if (!DISCORD_WEBHOOK_URL.includes("discord.com/api/webhooks")) {
-        console.error("❌ El webhook URL no parece ser válido");
-        console.error("❌ URL actual:", DISCORD_WEBHOOK_URL.substring(0, 50) + "...");
+        console.error("❌ The webhook URL does not appear to be valid");
+        console.error("❌ Current URL:", DISCORD_WEBHOOK_URL.substring(0, 50) + "...");
         return;
     }
 
@@ -46,17 +46,17 @@ export async function sendDiscordAlert(message: string): Promise<void> {
             // Specific error messages for common error codes
             switch (response.status) {
                 case 404:
-                    console.error("❌ El webhook fue eliminado o la URL es incorrecta");
+                    console.error("❌ The webhook was deleted or the URL is incorrect.");
                     break;
                 case 401:
                 case 403:
-                    console.error("❌ Sin permisos para usar este webhook");
+                    console.error("❌ No permissions to use this webhook");
                     break;
                 case 429:
-                    console.error("❌ Rate limit alcanzado (máx 30 msgs/min)");
+                    console.error("❌ Rate limit reached (max 30 messages/min)");
                     break;
                 default:
-                    console.error("❌ Error desconocido del servidor de Discord");
+                    console.error("❌ Unknown Discord server error");
             }
             
             throw new Error(`Discord webhook error ${response.status}: ${responseBody}`);
@@ -74,7 +74,7 @@ export async function sendDiscordAlert(message: string): Promise<void> {
             console.error("❌ Error message:", error.message);
             
             if (error.message.includes('fetch is not defined')) {
-                console.error("❌ Fetch not available. Make sure to use Node 18+ or install node-fetch");
+                console.error("❌ Fetch not available. Make sure to use Node 18+");
             }
         } else {
             console.error("❌ Unknown error:", error);
