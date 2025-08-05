@@ -29,27 +29,28 @@ cp .env.example .env
 # Configure your .env file (Add your Discord webhook)
 ```
 
+- You must have something like this:
+
+```bash
+ETHEREUM_RPC_URL=https://eth.llamarpc.com
+SEQUENCER_ADDRESS=0x1234567890123456789012345678901234567890
+DISCORD_WEBHOOK_URL=add_your_webhook_here
+```
+
 - Build project
 
 ```shell
 npm run build
 ```
 
-- Run the project Locally:
+- Run the project in local:
 ```
 npm run start
 ```
 
-- Run the project in the Lambda:
+- Run the project in the AWS Lambda:
 ```shell
 npx serverless offline
-```
-
-## Configuration
-```bash
-ETHEREUM_RPC_URL=https://eth-mainnet.alchemyapi.io/v2/YOUR_KEY
-SEQUENCER_ADDRESS=0x1234567890123456789012345678901234567890
-DISCORD_WEBHOOK_URL=add_your_webhook_here
 ```
 
 ## 🏗️ Architecture
@@ -68,8 +69,14 @@ DISCORD_WEBHOOK_URL=add_your_webhook_here
 
 ## 🔧 Development
 **Running Tests**
+- To execute unit tests run this command:
 ```bash
-npm test ->                 # Integration and unit tests
+npm run test:unit
+```
+
+- To execute integration test run this command:
+```bash
+npm run test:integration
 ```
 
 ## 📊 Performance Optimizations
@@ -87,7 +94,6 @@ npm test ->                 # Integration and unit tests
 - 🔥 Error: System errors and failures
 
 **Metrics Tracked**
-
 - Job execution frequency
 - RPC response times
 - System error rates
