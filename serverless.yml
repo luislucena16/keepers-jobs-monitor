@@ -1,0 +1,85 @@
+service: makerdao-job-monitor
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1  # Change to your preferred region
+  memorySize: 512    # MB of RAM
+  timeout: 900        # Timeout in seconds (maximum for scheduled events)
+  
+  # Environment variables
+  environment:
+    ETHEREUM_RPC_URL: ${env:ETHEREUM_RPC_URL}
+    SEQUENCER_ADDRESS: ${env:SEQUENCER_ADDRESS}
+    DISCORD_WEBHOOK_URL: ${env:DISCORD_WEBHOOK_URL}
+  
+  # IAM permissions (minimum required)
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "arn:aws:logs:*:*:*"
+
+functions:
+  monitorJobs:
+    handler: dist/lambda-handler.handler
+    description: "Monitor MakerDAO jobs every 5 minutes and alert if stalled"
+    
+    # ⏰ Trigger: Run every 5 minutes
+    events:
+      - schedule:
+          rate: rate(5 minutes)
+          enabled: true
+          description: "Monitor MakerDAO jobs every 5 minutes"
+    
+    # Specific settings for this function
+    memorySize: 512
+    timeout: 900
+    
+    # Tags for organization
+    tags:
+      Project: MakerDAO
+      Environment: ${opt:stage, 'dev'}
+      Function: JobMonitor
+
+# Required plugins
+plugins:
+  - serverless-offline
+
+# Custom settings
+custom:
+  # For local testing
+  serverless-offline:
+    httpPort: 3000
+    
+  # TypeScript configuration
+  serverless-plugin-typescript:
+    tsConfigFileLocation: './tsconfig.json'
+
+# Additional resources (optional)
+resources:
+  Resources:
+    # CloudWatch Log Group with retention
+    MonitorJobsLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-${opt:stage, 'dev'}-monitorJobs
+        RetentionInDays: 14  # Logs are deleted after 14 days
+
+  # Useful outputs
+  Outputs:
+    LambdaFunctionArn:
+      Description: "Lambda function RNA"
+      Value:
+        Fn::GetAtt: [MonitorJobsLambdaFunction, Arn]
+    
+    CloudWatchLogGroup:
+      Description: "CloudWatch Log Group"
+      Value:
+        Ref: MonitorJobsLogGroup
