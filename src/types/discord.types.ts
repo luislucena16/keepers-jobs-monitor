@@ -39,7 +39,7 @@ export async function sendDiscordAlert(message: string): Promise<void> {
 
         if (!response.ok) {
             const responseBody = await response.text();
-            console.error(`❌ Error en webhook Discord:`);
+            console.error(`❌ Error in webhook Discord:`);
             console.error(`   Status: ${response.status} ${response.statusText}`);
             console.error(`   Body: ${responseBody}`);
             

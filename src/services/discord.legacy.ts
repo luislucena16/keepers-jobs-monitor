@@ -36,10 +36,6 @@ export async function sendDiscordMessage(message: string): Promise<void> {
       }),
     });
 
-    console.log('📊 Discord API Response:', {
-      status: response.status,
-      statusText: response.statusText
-    });
 
     if (response.ok) {
       console.log('✅ Discord message sent successfully!');

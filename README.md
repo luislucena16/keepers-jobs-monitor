@@ -48,10 +48,13 @@ npm run build
 npm run start
 ```
 
-- Run the project in the AWS Lambda:
+- Run the project using `serverless offline` with AWS Lambda:
 ```shell
 npx serverless offline
 ```
+
+It will start sending an alert every 5 minutes, which will look something like this:
+![Jobs Alert](jobs-alert.png)
 
 ## 🏗️ Architecture
 ```shell

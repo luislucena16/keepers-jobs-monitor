@@ -16,21 +16,21 @@ const sequencerAddress = process.env.SEQUENCER_ADDRESS ?? "";
 export const handler = async (): Promise<void> => {
     console.log("🚀 Handler function called!");
     console.log("🔧 Environment check:");
-    console.log("   - ETHEREUM_RPC_URL:", process.env.ETHEREUM_RPC_URL ? "✅ Configurado" : "❌ FALTANTE");
-    console.log("   - SEQUENCER_ADDRESS:", process.env.SEQUENCER_ADDRESS ? "✅ Configurado" : "❌ FALTANTE");
-    console.log("   - DISCORD_WEBHOOK_URL:", process.env.DISCORD_WEBHOOK_URL ? "✅ Configurado" : "❌ FALTANTE");
+    console.log("   - ETHEREUM_RPC_URL:", process.env.ETHEREUM_RPC_URL ? "✅ Added" : "❌ Missing");
+    console.log("   - SEQUENCER_ADDRESS:", process.env.SEQUENCER_ADDRESS ? "✅ Added" : "❌ Missing");
+    console.log("   - DISCORD_WEBHOOK_URL:", process.env.DISCORD_WEBHOOK_URL ? "✅ Added" : "❌ Missing");
 
     // Verify critical variables
     if (!process.env.ETHEREUM_RPC_URL) {
-        console.error("❌ ETHEREUM_RPC_URL no está configurada!");
+        console.error("❌ ETHEREUM_RPC_URL not added!");
         return;
     }
     if (!process.env.SEQUENCER_ADDRESS) {
-        console.error("❌ SEQUENCER_ADDRESS no está configurada!");
+        console.error("❌ SEQUENCER_ADDRESS not added!");
         return;
     }
     if (!process.env.DISCORD_WEBHOOK_URL) {
-        console.error("❌ DISCORD_WEBHOOK_URL no está configurada!");
+        console.error("❌ DISCORD_WEBHOOK_URL not added!");
         return;
     }
 
@@ -109,7 +109,7 @@ export const handler = async (): Promise<void> => {
         }
 
     } catch (error) {
-        console.error("❌ Error en handler:", error);
+        console.error("❌ Error in handler:", error);
         
         if (error instanceof Error) {
             console.error("❌ Error stack:", error.stack);
