@@ -96,7 +96,7 @@ npm run test:integration
 
 ## 📖 API Documentation
 **JobMonitorService**
-```shell
+```ts
 class JobMonitorService {
   async checkJobsEfficiently(
     jobAddresses: string[],
