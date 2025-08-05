@@ -30,14 +30,17 @@ interface BlockCache {
 export class JobMonitorService {
   private blockCache: LRUCache<number, BlockCache>;
   private jobStatusCache: LRUCache<string, JobStatus>;
+  private provider: ethers.providers.JsonRpcProvider;
 
-  constructor() {
+
+  constructor(provider?: ethers.providers.JsonRpcProvider) {
+    this.provider = provider || new ethers.providers.JsonRpcProvider("https://eth.llamarpc.com");
     this.blockCache = new LRUCache({ max: 50, ttl: 1000 * 60 * 5 }); // 5 min cache for blocks
     this.jobStatusCache = new LRUCache({ max: 1000, ttl: 1000 * 60 * 2 }); // 2 min cache for jobs
   }
 
   async getCurrentBlock(): Promise<number> {
-    return provider.getBlockNumber();
+    return this.provider.getBlockNumber();
   }
 
   // Fetch a block with transactions, caching results to reduce RPC calls
@@ -46,7 +49,7 @@ export class JobMonitorService {
     if (cached) return cached;
 
     try {
-      const block = await provider.getBlockWithTransactions(blockNumber);
+      const block = await this.provider.getBlockWithTransactions(blockNumber);
       if (!block) return null;
 
       const blockCacheData: BlockCache = {
