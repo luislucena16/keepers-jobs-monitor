@@ -28,7 +28,7 @@ provider:
 
 functions:
   monitorJobs:
-    handler: dist/lambda-handler.handler
+    handler: dist/handlers/lambda-handler.handler
     description: "Monitor MakerDAO jobs every 5 minutes and alert if stalled"
     
     # ⏰ Trigger: Run every 5 minutes
