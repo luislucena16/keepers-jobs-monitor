@@ -114,11 +114,39 @@ class JobMonitorService {
 
 ## 🤝 Contributing
 
-- i) Fork the repository
-- ii) Create a feature branch
-- iii) Add tests for new functionality
-- iv) Ensure all tests pass
-- v) Submit a pull request
+### Contribution Guidelines
+
+This is a project that can be used as a base for new developments. You can:
+
+2. **Fork** the repository for your own project
+3. **Contribute** - Any PR is welcome to improve the template
+
+If contributing:
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Code Standards
+
+- Use **TypeScript** for all code
+- Follow configured **ESLint** and **Prettier**
+- Write **tests** for new features
+- Document **APIs** and complex functions
+
+### Commit Structure
+
+```
+feat: new feature
+fix: bug fix
+docs: documentation
+style: code formatting
+refactor: refactoring
+test: tests
+chore: maintenance tasks
+```
+
 
 ## 📝 License
 
