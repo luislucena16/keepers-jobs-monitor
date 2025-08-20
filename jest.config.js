@@ -9,5 +9,8 @@ module.exports = {
     ...tsJestTransformCfg,
   },
   setupFilesAfterEnv: ['jest-extended/all'],
+  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/tests/**/*.test.ts"],
 
 };
