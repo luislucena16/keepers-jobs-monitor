@@ -44,8 +44,9 @@ npm run start
 ```shell
 npx serverless offline
 ```
+> **Note:** This Lambda is configured by default with `cold start` behavior, so it may take a few minutes to initialize the first time it runs. To reduce startup time, we can configure provisioned concurrency or implement strategies to keep the function warm and speed up `hot starts`.
 
-**Note**: It will start sending an alert every 5 minutes, which will look something like this:
+It will start sending an alert every `5 minutes`, which will look something like this:
 ![Jobs Alert](jobs-alert.png)
 
 ## 🏗️ Architecture
