@@ -83,6 +83,90 @@ describe("JobMonitorService", () => {
     });
   });
 
+  describe("getLastWorkedBlock (positive path)", () => {
+    it("should detect last worked block when work() tx is present and cache result", async () => {
+      const jobAddress = "0xAbCDEF1234567890abcdef1234567890ABCDEF12";
+      const fromBlock = 10;
+      const toBlock = 12;
+
+      const WORK_SELECTOR = ethers.utils.id("work(bytes32,bytes)").slice(0, 10);
+
+      // Return different blocks depending on requested number
+      mockProvider.getBlockWithTransactions.mockImplementation(
+        async (
+          blockTag: ethers.providers.BlockTag | Promise<ethers.providers.BlockTag>
+        ) => {
+          const resolvedBlockTag = await blockTag as any;
+          const blockNumber =
+            typeof resolvedBlockTag === "number"
+              ? resolvedBlockTag
+              : parseInt(resolvedBlockTag as any) || 0;
+          if (blockNumber === 12) {
+            return {
+              number: 12,
+              hash: "0xblock12",
+              parentHash: "0xparent",
+              timestamp: 1000,
+              // No matching tx here
+              transactions: [
+                {
+                  to: "0x0000000000000000000000000000000000000000",
+                  data: "0xdeadbeef",
+                } as any,
+              ],
+            } as any;
+          }
+          if (blockNumber === 11) {
+            return {
+              number: 11,
+              hash: "0xblock11",
+              parentHash: "0xparent",
+              timestamp: 999,
+              // Matching work() transaction to the target job
+              transactions: [
+                {
+                  to: jobAddress,
+                  data: `${WORK_SELECTOR}00`,
+                } as any,
+              ],
+            } as any;
+          }
+          // Default for any other block
+          return {
+            number: blockNumber,
+            hash: "0xblock",
+            parentHash: "0xparent",
+            timestamp: 998,
+            transactions: [],
+          } as any;
+        }
+      );
+
+      const lastWorkedBlock = await jobMonitor.getLastWorkedBlock(
+        jobAddress,
+        fromBlock,
+        toBlock
+      );
+
+      expect(lastWorkedBlock).toBe(11);
+
+      // Verify cached status is set and not stalled
+      const cached = (jobMonitor as any).jobStatusCache.get(jobAddress);
+      expect(cached?.isStalled).toBe(false);
+      expect(cached?.lastWorkedBlock).toBe(11);
+
+      // Subsequent call should hit cache and avoid further provider calls
+      mockProvider.getBlockWithTransactions.mockClear();
+      const cachedResult = await jobMonitor.getLastWorkedBlock(
+        jobAddress,
+        fromBlock,
+        toBlock
+      );
+      expect(cachedResult).toBe(11);
+      expect(mockProvider.getBlockWithTransactions).not.toHaveBeenCalled();
+    });
+  });
+
   describe("checkJobsEfficiently", () => {
     it("should return an array of JobStatus objects with correct addresses", async () => {
       const jobs = ["0x1", "0x2", "0x3"];
